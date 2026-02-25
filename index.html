@@ -4,79 +4,105 @@
   <meta charset="UTF-8">
   <title>Consulta de DNI - MARCELO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     * { box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #eef1f7;
-      color: #333;
       margin: 0;
       padding: 30px 15px;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(-45deg, #0077cc, #005fa3, #3a8dde, #1f6fb2);
+      background-size: 400% 400%;
+      animation: fondoAnimado 10s ease infinite;
+    }
+
+    @keyframes fondoAnimado {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .container {
-      max-width: 500px;
       width: 100%;
-      background: #fff;
-      border-radius: 10px;
+      max-width: 520px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
       padding: 30px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      color: white;
+      animation: aparecer 0.5s ease;
+    }
+
+    @keyframes aparecer {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     h2 {
-      color: #005fa3;
       text-align: center;
       margin-bottom: 25px;
+      font-size: 22px;
+      font-weight: 600;
     }
 
     form {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
+      gap: 10px;
     }
 
     input {
+      flex: 1;
       padding: 12px;
+      border-radius: 10px;
+      border: none;
       font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      transition: 0.3s border;
+      outline: none;
+      transition: 0.3s;
     }
 
     input:focus {
-      border-color: #0077cc;
-      outline: none;
+      transform: scale(1.03);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.4);
     }
 
     button {
-      padding: 12px;
-      font-size: 16px;
-      background-color: #0077cc;
-      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
       border: none;
-      border-radius: 6px;
+      background: white;
+      color: #0077cc;
+      font-weight: bold;
       cursor: pointer;
-      transition: 0.3s background;
+      transition: 0.3s;
     }
 
     button:hover {
-      background-color: #005fa3;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
     .resultado {
       position: relative;
       margin-top: 25px;
-      padding: 20px;
-      border-radius: 8px;
-      background: #f9f9f9;
-      border-left: 5px solid #0077cc;
+      padding: 22px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(8px);
       font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.7;
+      animation: fadeIn 0.3s ease;
       overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .resultado::before {
@@ -86,30 +112,46 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 60px;
-      color: rgba(0, 0, 0, 0.05);
+      color: rgba(255, 255, 255, 0.08);
       font-weight: bold;
       pointer-events: none;
       white-space: nowrap;
     }
 
-    .error {
-      color: #d8000c;
-      background-color: #ffdddd;
-      border-left: 5px solid #d8000c;
+    .dato {
+      margin-bottom: 6px;
     }
 
-    .error::before {
-      content: none;
+    .label {
+      font-weight: bold;
+      color: rgba(0, 0, 0, 0.815);
+    }
+
+    .error {
+      background: rgba(255, 0, 0, 0.2);
+    }
+
+    .loading {
+      text-align: center;
+      font-weight: bold;
+      animation: parpadeo 1s infinite;
+    }
+
+    @keyframes parpadeo {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
     }
 
     footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 14px;
-      color: #999;
+      position: absolute;
+      bottom: 10px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.808);
     }
   </style>
 </head>
+
 <body>
 
   <div class="container">
@@ -136,19 +178,16 @@
 
       if (dni.length !== 8 || isNaN(dni)) {
         resultado.className = 'resultado error';
-        resultado.innerHTML = '❌ DNI inválido. Debe tener 8 dígitos numéricos.';
+        resultado.innerHTML = '❌ DNI inválido.';
         return;
       }
 
-      resultado.className = 'resultado';
+      resultado.className = 'resultado loading';
       resultado.innerHTML = '⏳ Consultando datos...';
 
       try {
         const response = await fetch(`https://miapi.cloud/v1/dni/${dni}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
+          headers: { 'Authorization': 'Bearer ' + token }
         });
 
         const data = await response.json();
@@ -156,41 +195,29 @@
         if (data.success && data.datos) {
           const info = data.datos;
 
-          let fechaNacimiento = info.fecha_nacimiento || null;
-          let edad = '';
-
-          if (fechaNacimiento) {
-            const fechaNac = new Date(fechaNacimiento);
-            const hoy = new Date();
-            edad = hoy.getFullYear() - fechaNac.getFullYear();
-            const m = hoy.getMonth() - fechaNac.getMonth();
-            if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
-              edad--;
-            }
-          }
-
           resultado.className = 'resultado';
           resultado.innerHTML = `
-            ✅ <strong>DNI:</strong> ${info.dni || dni}<br>
-            <strong>Nombres:</strong> ${info.nombres || 'N/A'}<br>
-            <strong>Apellido Paterno:</strong> ${info.ape_paterno || 'N/A'}<br>
-            <strong>Apellido Materno:</strong> ${info.ape_materno || 'N/A'}<br>
-            ${fechaNacimiento ? `<strong>Fecha de Nacimiento:</strong> ${fechaNacimiento}<br><strong>Edad:</strong> ${edad} años<br>` : ''}
+            <div class="dato"><span class="label">✅ DNI:</span> ${info.dni || dni}</div>
+            <div class="dato"><span class="label">Nombres:</span> ${info.nombres || 'N/A'}</div>
+            <div class="dato"><span class="label">Apellido Paterno:</span> ${info.ape_paterno || 'N/A'}</div>
+            <div class="dato"><span class="label">Apellido Materno:</span> ${info.ape_materno || 'N/A'}</div>
+
             ${info.domiciliado ? `
-              <strong>Dirección:</strong> ${info.domiciliado.direccion || ''}<br>
-              <strong>Distrito:</strong> ${info.domiciliado.distrito || ''}<br>
-              <strong>Provincia:</strong> ${info.domiciliado.provincia || ''}<br>
-              <strong>Departamento:</strong> ${info.domiciliado.departamento || ''}<br>
+              <hr style="border-color: rgba(255,255,255,0.3);">
+              <div class="dato"><span class="label">Dirección:</span> ${info.domiciliado.direccion || ''}</div>
+              <div class="dato"><span class="label">Distrito:</span> ${info.domiciliado.distrito || ''}</div>
+              <div class="dato"><span class="label">Provincia:</span> ${info.domiciliado.provincia || ''}</div>
+              <div class="dato"><span class="label">Departamento:</span> ${info.domiciliado.departamento || ''}</div>
             ` : ''}
           `;
         } else {
           resultado.className = 'resultado error';
-          resultado.innerHTML = '❌ No se encontraron datos o el DNI no es válido.';
+          resultado.innerHTML = '❌ No se encontraron datos.';
         }
+
       } catch (error) {
-        console.error(error);
         resultado.className = 'resultado error';
-        resultado.innerHTML = '⚠️ Error al conectar con la API.';
+        resultado.innerHTML = '⚠️ Error al conectar.';
       }
     });
   </script>
